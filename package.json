@@ -6,9 +6,10 @@
     "node": ">=24"
   },
   "scripts": {
-    "admin": "tsx --env-file-if-exists=.env admin/dev.ts",
-    "setup": "tsx --env-file-if-exists=.env jsonyan/setup/index.ts",
-    "daily": "tsx --env-file-if-exists=.env ci/daily.ts",
+    "admin": "tsx --env-file-if-exists=.jsonyan.env --env-file-if-exists=.local.env admin/dev.ts",
+    "setup": "tsx --env-file-if-exists=.jsonyan.env jsonyan/setup/index.ts",
+    "daily": "tsx --env-file-if-exists=.jsonyan.env ci/daily.ts",
+    "github:env": "tsx ci/github-env.ts",
     "site": "tsx site/dev.ts",
     "build:site": "tsx site/build.tsx",
     "typecheck": "tsc"

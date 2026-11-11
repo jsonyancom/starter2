@@ -1,7 +1,7 @@
 /**
  * Sends one prompt to OpenAI for the submitWord workflow. A workflow request gets 20 seconds, too
  * short to wait for an AI answer, so the workflow stops at an ask whose response holds the prompt,
- * and the admin's server sends it. The server reads OPENAI_API_KEY from .env; the browser never
+ * and the admin's server sends it. The server reads OPENAI_API_KEY from .local.env; the browser never
  * gets it.
  */
 
@@ -32,7 +32,7 @@ export function isPromptTask(value: unknown): value is PromptTask {
 /** Send the prompt and return OpenAI's answer as parsed JSON, to resume the workflow with. */
 export async function answerPrompt(task: PromptTask): Promise<unknown> {
   if (process.env.OPENAI_API_KEY === undefined || process.env.OPENAI_API_KEY === '') {
-    throw new Error('Add your OpenAI API key to .env as OPENAI_API_KEY, then run npm run admin again.');
+    throw new Error('Add your OpenAI API key to .local.env as OPENAI_API_KEY, then run npm run admin again.');
   }
   const openai = new OpenAI();
   const completion = await openai.chat.completions.create({

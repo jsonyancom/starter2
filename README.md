@@ -22,16 +22,16 @@ The rest of this file is about running the app.
 
 ## 1. Set up with START.md
 
-1. Install, and create your `.env`:
+1. Install:
 
    ```sh
    npm install
-   cp .env.example .env
    ```
 
 2. On jsonyan.com, open your project and choose **Clients**, then **Create client**. Leave
-   **Limit available APIs** off. Choose **Copy .env** and paste it over the six `JSONYAN_*` lines
-   of `.env`. The secret is shown only once.
+   **Limit available APIs** off. Choose **Copy .env** and paste it into a new file named
+   `.jsonyan.env` in this folder (`.jsonyan.env.example` shows what it holds). The secret is
+   shown only once.
 3. Open your coding agent in this folder and send:
 
    ```text
@@ -45,8 +45,9 @@ The rest of this file is about running the app.
 
 The key goes in two places, because two things call OpenAI:
 
-- **In `.env`**, as `OPENAI_API_KEY`. The admin uses it when you submit a word. Only the admin's
-  server reads it, on your machine; it is never sent to the browser.
+- **In `.local.env`**, as `OPENAI_API_KEY`: copy `.local.env.example` to `.local.env` and add the
+  key. The admin uses it when you submit a word. Only the admin's server reads it, on your
+  machine; it is never sent to the browser or to GitHub.
 - **In JSONyan**, as a secret named exactly `openAIApiKey`. On jsonyan.com, open the project,
   choose **Secrets**, then **Create secret**, enter the name `openAIApiKey` and paste the key as
   the value. The daily word uses it: JSONyan sends that batch to OpenAI itself.
@@ -81,34 +82,37 @@ again when `site/` or `content/` changes. It needs no keys. Change `site/pages/`
 
 ## 5. Put it on GitHub
 
-Push the repository to GitHub, on the branch `main`. `.env` is not pushed: Git ignores it.
+Push the repository to GitHub, on the branch `main`. `.jsonyan.env` and `.local.env` are not
+pushed: Git ignores them.
 
-### Store a JSONyan client for the daily job
+### Give the daily job its JSONyan client
 
-The daily job runs on GitHub, so it needs a JSONyan client of its own, kept as encrypted
-repository secrets. Do not reuse your local client, and never commit a client's values.
+The daily job runs on GitHub, so GitHub needs the JSONyan client's values. One command saves
+them in your repository's settings:
 
-1. On jsonyan.com, create a second client (**Clients**, then **Create client**) and choose
-   **Copy .env**. To limit it, turn on **Limit available APIs** and select
-   `v1.startWorkflowInstance`, `v1.resumeWorkflowInstance`,
-   `v1.listWorkflowInstanceContextPeeks`, `v1.listRowMetadataByUpdatedAt`,
-   `v1.fetchMultipleRows`, `v1.findRow`, and the methods your agent listed when it finished
-   START.md.
-2. In the GitHub repository, open **Settings → Secrets and variables → Actions**, and choose
-   **New repository secret** once per line of the copied text. The name is the part before `=`
-   and the secret is the part after it:
+```sh
+npm run github:env
+```
 
-   | Name                    | Secret                              |
-   | ----------------------- | ----------------------------------- |
-   | `JSONYAN_URL`           | The value after `JSONYAN_URL=`      |
-   | `JSONYAN_API_PATH`      | The value after `JSONYAN_API_PATH=` |
-   | `JSONYAN_TOKEN_URL`     | The value after `JSONYAN_TOKEN_URL=` |
-   | `JSONYAN_PROJECT_ID`    | The value after `JSONYAN_PROJECT_ID=` |
-   | `JSONYAN_CLIENT_ID`     | The value after `JSONYAN_CLIENT_ID=` |
-   | `JSONYAN_CLIENT_SECRET` | The value after `JSONYAN_CLIENT_SECRET=` |
+It reads `.jsonyan.env`, shows which repository it will change, and asks before sending:
 
-GitHub encrypts the secrets, hides them in logs, and never shows them again. The daily job does
-not need your OpenAI key: JSONyan already has it as `openAIApiKey`.
+| Name                    | Saved as                                                        |
+| ----------------------- | --------------------------------------------------------------- |
+| `JSONYAN_CLIENT_SECRET` | A repository secret: encrypted, hidden in logs, never shown again |
+| The other five `JSONYAN_*` values | Repository variables, which are not secret            |
+
+It sends only those six names and never reads `.local.env`, so your OpenAI key does not go to
+GitHub. The daily job does not need it: JSONyan already has it as `openAIApiKey`.
+
+The command needs the [GitHub CLI](https://cli.github.com), signed in with `gh auth login`.
+Without it, add the same names by hand under **Settings → Secrets and variables → Actions**:
+`JSONYAN_CLIENT_SECRET` on the **Secrets** tab, the other five on the **Variables** tab.
+
+To give the job a client of its own with fewer permissions, create a second client with
+**Limit available APIs** on, select `v1.startWorkflowInstance`, `v1.resumeWorkflowInstance`,
+`v1.listWorkflowInstanceContextPeeks`, `v1.listRowMetadataByUpdatedAt`, `v1.fetchMultipleRows`,
+`v1.findRow` and the methods your agent listed when it finished START.md, paste its **Copy .env**
+into another file such as `.ci.env`, and run `npm run github:env -- .ci.env`.
 
 ### Turn on GitHub Pages
 
@@ -145,7 +149,7 @@ writes every word in the table to `content/words.json`, and, when the file chang
 
 Open the **Actions** tab, choose **Daily**, then **Run workflow**. The run must end green: it
 starts today's word and publishes the words you added in the admin. If it fails, its log names
-what is missing, usually a repository secret from step 5.
+what is missing, usually the JSONyan client's values from step 5.
 
 Run it by hand again whenever you want to publish now, for example after adding or deleting words
 in the admin.
@@ -184,7 +188,7 @@ workflow's "…" menu in the **Actions** tab.
 - **Before you push code**, run `git pull --rebase`: the job commits to `main` too.
 
 You can also run it on your machine: `npm run daily` (or `npm run daily -- --retrieve-only` to
-skip starting a word) uses `.env` and writes `content/words.json` without committing.
+skip starting a word) uses `.jsonyan.env` and writes `content/words.json` without committing.
 
 ## What's where
 
@@ -199,7 +203,8 @@ skip starting a word) uses `.env` and writes `content/words.json` without commit
 | `jsonyan/setup/`     | The table and workflow definitions, applied by `npm run setup`                     |
 | `jsonyan/`           | The JSONyan client, and the IDs that setup wrote (`resources.ts`)                  |
 | `.github/workflows/` | `daily.yml`, the schedule, and `site.yml`, which builds and deploys the site       |
-| `.env.example`       | The names `.env` needs                                                             |
+| `ci/github-env.ts`   | Sends the JSONyan client's values to your GitHub repository                        |
+| `.jsonyan.env.example`, `.local.env.example` | What `.jsonyan.env` and `.local.env` hold                  |
 
 ## Scripts
 
@@ -210,21 +215,22 @@ skip starting a word) uses `.env` and writes `content/words.json` without commit
 | `npm run build:site` | Builds `content/` into `dist/` once, as the deploy does                         |
 | `npm run setup`      | Creates or updates the table and workflows in `jsonyan/setup/`                  |
 | `npm run daily`      | Runs the daily job once                                                         |
+| `npm run github:env` | Saves the JSONyan client in `.jsonyan.env` to your GitHub repository            |
 | `npm run typecheck`  | Type-checks everything                                                          |
 
 ## Keys and secrets
 
 | What                       | Where it is kept                          | Who reads it                          |
 | -------------------------- | ----------------------------------------- | ------------------------------------- |
-| Your local JSONyan client  | `.env`, ignored by Git                    | `npm run admin`, `setup` and `daily`  |
-| Your OpenAI key            | `.env`, and JSONyan's secret `openAIApiKey` | The admin's server, and JSONyan     |
-| The job's JSONyan client   | GitHub repository secrets                 | The daily job                         |
-| The local client's token   | `.jsonyan-token.json`, ignored by Git     | `npm run admin`, `setup` and `daily`  |
+| Your JSONyan client        | `.jsonyan.env`, ignored by Git            | `npm run admin`, `setup` and `daily`  |
+| The same client, on GitHub | A repository secret and five variables    | The daily job                         |
+| Your OpenAI key            | `.local.env`, ignored by Git, and JSONyan's secret `openAIApiKey` | The admin's server, and JSONyan |
+| The client's token         | `.jsonyan-token.json`, ignored by Git     | `npm run admin`, `setup` and `daily`  |
 
 Nothing secret is in the repository, in the site, or in any JavaScript sent to a browser. If
-`.env` has no JSONyan values, `npm run admin` and `npm run setup` ask you to paste them instead.
+`.jsonyan.env` is missing, `npm run admin` and `npm run setup` ask you to paste its values instead.
 
 The token file is why running a command again costs nothing extra. A JSONyan token works for one
 hour, and asking for a new one while the last has more than 5 minutes left costs credits, so the
 commands save the token and share it. It gives the same access as the client for that hour, so
-treat it like `.env`. Delete the file to make the next command ask for a new token.
+treat it like `.jsonyan.env`. Delete the file to make the next command ask for a new token.

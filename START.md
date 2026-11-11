@@ -7,9 +7,9 @@ workflows in the user's JSONyan project. The code that uses them is already in t
 ## 1. Check the environment
 
 - `node_modules/` exists. If not, run `npm install`.
-- `.env` exists and gives a value to every `JSONYAN_*` name in `.env.example`. Check this without
-  printing the values, and never print, log or commit them. If the file or a value is missing,
-  stop and ask the user to do step 1 of `README.md`.
+- `.jsonyan.env` exists and gives a value to every name in `.jsonyan.env.example`. Check this
+  without printing the values, and never print, log or commit them. If the file or a value is
+  missing, stop and ask the user to do step 1 of `README.md`.
 
 ## 2. Download the JSONyan reference
 
@@ -121,7 +121,7 @@ npm run typecheck
 ```
 
 Then run each workflow once. Both call OpenAI with the user's key and spend JSONyan credits, so
-tell the user first. They need step 2 of `README.md`: `OPENAI_API_KEY` in `.env`, and the secret
+tell the user first. They need step 2 of `README.md`: `OPENAI_API_KEY` in `.local.env`, and the secret
 `openAIApiKey` in the project. If that is not done, ask the user to do it, or finish without these
 two checks and say so.
 
@@ -152,6 +152,6 @@ When an instance fails, the output shows the state and the message. Fix the defi
 Tell the user:
 
 - what you created, and what each check showed;
-- which `v1` methods the actions of `dailyWord` call, because the GitHub Actions client needs
-  them (step 5 of `README.md`);
+- which `v1` methods the actions of `dailyWord` call, in case they give the GitHub job a client
+  limited to the methods it needs (step 5 of `README.md`);
 - to continue with `README.md`.

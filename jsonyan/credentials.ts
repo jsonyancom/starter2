@@ -1,8 +1,9 @@
 /**
  * The project client's credentials. Each script reads them from JSONYAN_* variables: on your
- * machine the npm scripts load them from .env, which Git ignores, and GitHub Actions passes
- * repository secrets under the same names. A script run in a terminal asks you to paste the
- * client's **Copy .env** for any that are missing, and keeps what you paste in memory only.
+ * machine the npm scripts load them from .jsonyan.env, which Git ignores, and GitHub Actions
+ * passes a repository secret and variables under the same names (`npm run github:env` saves
+ * them there). A script run in a terminal asks you to paste the client's **Copy .env** for any
+ * that are missing, and keeps what you paste in memory only.
  */
 
 import { createInterface } from 'node:readline';
@@ -22,7 +23,7 @@ export type JsonyanCredentials = {
 };
 
 /** The variable that holds each credential, as the client's Copy .env names them. */
-const VARIABLES = {
+export const CREDENTIAL_VARIABLES = {
   url: 'JSONYAN_URL',
   apiPath: 'JSONYAN_API_PATH',
   tokenUrl: 'JSONYAN_TOKEN_URL',
@@ -31,7 +32,7 @@ const VARIABLES = {
   clientSecret: 'JSONYAN_CLIENT_SECRET',
 } as const satisfies Record<keyof JsonyanCredentials, string>;
 
-const NAMES: readonly string[] = Object.values(VARIABLES);
+const NAMES: readonly string[] = Object.values(CREDENTIAL_VARIABLES);
 
 /** Where calls go: the part of the credentials that is not secret. */
 export type JsonyanEndpoint = Pick<JsonyanCredentials, 'url' | 'apiPath' | 'projectId'>;
@@ -41,18 +42,18 @@ function missingNames(env: NodeJS.ProcessEnv): string[] {
 }
 
 function readVariables<K extends keyof JsonyanCredentials>(env: NodeJS.ProcessEnv, keys: readonly K[]) {
-  const missing = keys.map((key) => VARIABLES[key]).filter((name) => env[name] === undefined || env[name] === '');
+  const missing = keys.map((key) => CREDENTIAL_VARIABLES[key]).filter((name) => env[name] === undefined || env[name] === '');
   if (missing.length > 0) {
     throw new Error(
-      `Missing ${missing.join(', ')}. Put the client's Copy .env in .env (see .env.example).`,
+      `Missing ${missing.join(', ')}. Put the client's Copy .env in .jsonyan.env (see .jsonyan.env.example).`,
     );
   }
-  return Object.fromEntries(keys.map((key) => [key, env[VARIABLES[key]] as string])) as Pick<JsonyanCredentials, K>;
+  return Object.fromEntries(keys.map((key) => [key, env[CREDENTIAL_VARIABLES[key]] as string])) as Pick<JsonyanCredentials, K>;
 }
 
 /** Read the credentials from the environment. Throws when one is missing. */
 export function credentialsFromEnv(env: NodeJS.ProcessEnv): JsonyanCredentials {
-  return readVariables(env, Object.keys(VARIABLES) as (keyof JsonyanCredentials)[]);
+  return readVariables(env, Object.keys(CREDENTIAL_VARIABLES) as (keyof JsonyanCredentials)[]);
 }
 
 /** Read only the endpoint from the environment, for a process that gets its tokens another way. */
@@ -63,8 +64,8 @@ export function endpointFromEnv(env: NodeJS.ProcessEnv): JsonyanEndpoint {
 /** A copy of the environment without the client's ID and secret, for a process that must not have them. */
 export function withoutClientCredentials(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const copy = { ...env };
-  delete copy[VARIABLES.clientId];
-  delete copy[VARIABLES.clientSecret];
+  delete copy[CREDENTIAL_VARIABLES.clientId];
+  delete copy[CREDENTIAL_VARIABLES.clientSecret];
   return copy;
 }
 

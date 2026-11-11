@@ -3,7 +3,8 @@
  * every `npm run setup`, `npm run daily` or `npm run admin` would ask JSONyan for a new token,
  * and a token requested while the last one has more than 5 minutes left costs credits.
  *
- * A token works for one hour and gives the client's access, so the file is as secret as .env.
+ * A token works for one hour and gives the client's access, so the file is as secret as
+ * .jsonyan.env.
  * Git ignores it, and only you can read it. Delete it to make the next command ask for a new token.
  */
 

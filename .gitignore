@@ -4,10 +4,10 @@ node_modules/
 # Built site (npm run build:site)
 /dist/
 
-# Your local client's values and your OpenAI key. Only the example is committed.
-.env
+# Your JSONyan client's values (.jsonyan.env) and your OpenAI key (.local.env). Only the
+# examples, which end in .example, are committed.
+*.env
 .env.*
-!.env.example
 .dev.vars
 
 # The JSONyan client's current token, shared by the npm scripts for up to an hour.

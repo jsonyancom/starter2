@@ -7,8 +7,8 @@
 # - 00:17 UTC: retrieve finished AI batches, start today's word, publish.
 # - 03:17 UTC: retrieve and publish only, so today's word usually appears the same day.
 #
-# It needs the six JSONYAN_* values of a JSONyan client as repository secrets:
-# Settings → Secrets and variables → Actions → New repository secret. See README.md.
+# It needs a JSONyan client: JSONYAN_CLIENT_SECRET as a repository secret and the other five
+# JSONYAN_* values as repository variables. `npm run github:env` saves them. See README.md.
 name: Daily
 
 on:
@@ -42,11 +42,11 @@ jobs:
       - run: npm run daily -- $DAILY_ARGS
         env:
           DAILY_ARGS: ${{ github.event.schedule == '17 3 * * *' && '--retrieve-only' || '' }}
-          JSONYAN_URL: ${{ secrets.JSONYAN_URL }}
-          JSONYAN_API_PATH: ${{ secrets.JSONYAN_API_PATH }}
-          JSONYAN_TOKEN_URL: ${{ secrets.JSONYAN_TOKEN_URL }}
-          JSONYAN_PROJECT_ID: ${{ secrets.JSONYAN_PROJECT_ID }}
-          JSONYAN_CLIENT_ID: ${{ secrets.JSONYAN_CLIENT_ID }}
+          JSONYAN_URL: ${{ vars.JSONYAN_URL }}
+          JSONYAN_API_PATH: ${{ vars.JSONYAN_API_PATH }}
+          JSONYAN_TOKEN_URL: ${{ vars.JSONYAN_TOKEN_URL }}
+          JSONYAN_PROJECT_ID: ${{ vars.JSONYAN_PROJECT_ID }}
+          JSONYAN_CLIENT_ID: ${{ vars.JSONYAN_CLIENT_ID }}
           JSONYAN_CLIENT_SECRET: ${{ secrets.JSONYAN_CLIENT_SECRET }}
       # Commit what was published, even when another step failed. No change, no commit.
       - id: push

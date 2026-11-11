@@ -1,7 +1,8 @@
 /**
- * `npm run admin`: read the client's credentials from .env, or ask for them when they are missing,
- * then run the admin's server (admin/server.ts) at http://127.0.0.1:5173. Whenever something in
- * admin/, jsonyan/ or site/ changes, it restarts the server; refresh the page to see the change.
+ * `npm run admin`: read the client's credentials from .jsonyan.env, or ask for them when they are
+ * missing, then run the admin's server (admin/server.ts) at http://127.0.0.1:5173. Whenever
+ * something in admin/, jsonyan/ or site/ changes, it restarts the server; refresh the page to see
+ * the change.
  *
  * This process keeps the client secret and the token, in memory only. The server gets neither: it
  * asks this process for a token whenever a call needs one. So every restart reuses the same token,

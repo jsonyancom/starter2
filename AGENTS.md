@@ -8,9 +8,10 @@ Read these before changing anything:
 
 ## Rules
 
-- **Keep secrets in `.env` and GitHub repository secrets only.** Never print, log or commit the
-  JSONyan client's values, its token (`.jsonyan-token.json`) or the OpenAI key, and never put them
-  in code or in anything sent to a browser.
+- **Keep secrets in `.jsonyan.env`, `.local.env` and the GitHub repository's secret only.** Never
+  print, log or commit the JSONyan client's values, its token (`.jsonyan-token.json`) or the
+  OpenAI key, and never put them in code or in anything sent to a browser. The OpenAI key never
+  goes to GitHub.
 - **Do not start loops, timers or background jobs that call JSONyan or OpenAI** unless the user
   asks. Every call spends the user's credits.
 - **The site never calls JSONyan or OpenAI.** It reads only `content/`, which only the daily job

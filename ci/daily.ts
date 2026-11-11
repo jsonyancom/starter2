@@ -9,7 +9,8 @@
  * 3. Publish: write every word in the table to content/words.json. The workflow then commits the
  *    file and deploys the site.
  *
- * On your machine it reads .env; in GitHub Actions the same names come from repository secrets.
+ * On your machine it reads .jsonyan.env; in GitHub Actions the same names come from the
+ * repository's secret and variables, which `npm run github:env` saves.
  */
 
 import { writeFile } from 'node:fs/promises';
