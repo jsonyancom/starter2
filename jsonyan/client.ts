@@ -1,12 +1,14 @@
 /**
  * A small JSONyan v1 client: it reuses each token until it nearly expires, calls methods, lists
- * every page, and starts and resumes workflow instances. It needs only `fetch`.
+ * every page, and starts and resumes workflow instances. It needs only `fetch`, and a file to keep
+ * the token in (jsonyan/token-cache.ts).
  *
  * Method names, inputs, results and errors are in docs/jsonyan.openrpc.json, and what each call
  * costs is in docs/jsonyan-client-credit.md. START.md says how to download both.
  */
 
 import type { JsonyanCredentials, JsonyanEndpoint } from './credentials.ts';
+import { readSavedToken, saveToken, type Token } from './token-cache.ts';
 
 /** An error JSONyan returned: `code` is the HTTP status and `errorName` identifies the error. */
 export class JsonyanError extends Error {
@@ -61,13 +63,17 @@ async function post(url: URL | string, init: RequestInit): Promise<Response> {
 
 /**
  * A function that returns a valid token, and asks JSONyan for a new one only when the last is
- * about to expire. Calls that need a token at the same time share one request.
+ * about to expire. Calls that need a token at the same time share one request, and commands share
+ * one token through jsonyan/token-cache.ts.
  */
 export function createTokenSource(credentials: JsonyanCredentials): () => Promise<string> {
-  let token: { value: string; expiresAt: number } | undefined;
+  const owner = { clientId: credentials.clientId, tokenUrl: credentials.tokenUrl };
+  const isFresh = (candidate: Token | undefined): candidate is Token =>
+    candidate !== undefined && candidate.expiresAt - Date.now() > REFRESH_BEFORE_EXPIRY_MS;
+  let token: Token | undefined;
   let pendingToken: Promise<string> | undefined;
 
-  async function requestToken(): Promise<string> {
+  async function requestToken(): Promise<Token> {
     const response = await post(credentials.tokenUrl, {
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -81,15 +87,26 @@ export function createTokenSource(credentials: JsonyanCredentials): () => Promis
       throw new Error(`The JSONyan token request failed with status ${response.status}.`);
     }
     const body = (await response.json()) as { access_token: string; expires_in?: number };
-    token = { value: body.access_token, expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000 };
+    return { value: body.access_token, expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000 };
+  }
+
+  /** The token another command saved, when it is still good; otherwise a new one, saved for the next. */
+  async function savedOrNewToken(): Promise<string> {
+    const saved = await readSavedToken(owner);
+    if (isFresh(saved)) {
+      token = saved;
+    } else {
+      token = await requestToken();
+      await saveToken({ owner, token });
+    }
     return token.value;
   }
 
   return function getToken(): Promise<string> {
-    if (token !== undefined && token.expiresAt - Date.now() > REFRESH_BEFORE_EXPIRY_MS) {
+    if (isFresh(token)) {
       return Promise.resolve(token.value);
     }
-    pendingToken ??= requestToken().finally(() => {
+    pendingToken ??= savedOrNewToken().finally(() => {
       pendingToken = undefined;
     });
     return pendingToken;

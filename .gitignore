@@ -10,5 +10,8 @@ node_modules/
 !.env.example
 .dev.vars
 
+# The JSONyan client's current token, shared by the npm scripts for up to an hour.
+.jsonyan-token.json*
+
 # JSONyan's reference, downloaded by following START.md, so every copy is current.
 /docs/

@@ -203,6 +203,12 @@ skip starting a word) uses `.env` and writes `content/words.json` without commit
 | Your local JSONyan client  | `.env`, ignored by Git                    | `npm run admin`, `setup` and `daily`  |
 | Your OpenAI key            | `.env`, and JSONyan's secret `openAIApiKey` | The admin's server, and JSONyan     |
 | The job's JSONyan client   | GitHub repository secrets                 | The daily job                         |
+| The local client's token   | `.jsonyan-token.json`, ignored by Git     | `npm run admin`, `setup` and `daily`  |
 
 Nothing secret is in the repository, in the site, or in any JavaScript sent to a browser. If
 `.env` has no JSONyan values, `npm run admin` and `npm run setup` ask you to paste them instead.
+
+The token file is why running a command again costs nothing extra. A JSONyan token works for one
+hour, and asking for a new one while the last has more than 5 minutes left costs credits, so the
+commands save the token and share it. It gives the same access as the client for that hour, so
+treat it like `.env`. Delete the file to make the next command ask for a new token.

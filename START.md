@@ -134,8 +134,15 @@ two checks and say so.
   A `303` means the word was saved. A `400` page holds the reason. Submit the same word again to
   check that no second row appears on http://127.0.0.1:5173/words.
 - **`dailyWord`**: run `npm run daily`. It starts an instance, which must be left waiting for its
-  batch. Run `npm run daily -- --retrieve-only` a few minutes later, and again until the instance
-  completes; a batch can take from minutes to hours. The new word is then in `content/words.json`.
+  batch. That is the check: the instance did not fail. Then run
+  `npm run daily -- --retrieve-only` once, a few minutes later. If the instance completed, the new
+  word is in `content/words.json`. If it still waits, stop there and tell the user: a batch can
+  take from minutes to hours, and a later `npm run daily -- --retrieve-only`, by the user or by the
+  daily job, finishes it.
+
+Do not keep checking in a loop, on a timer or in a background job unless the user asks for it:
+every run spends credits. Commands run within the same hour share one token
+(`.jsonyan-token.json`), so running one again soon costs no extra token.
 
 When an instance fails, the output shows the state and the message. Fix the definition, run
 `npm run setup` again, and start a new instance: a failed instance cannot be resumed.
