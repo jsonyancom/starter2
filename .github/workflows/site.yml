@@ -3,14 +3,18 @@
 #
 # Turn Pages on once: Settings → Pages → Build and deployment → Source: GitHub Actions.
 #
-# It runs on every push to main, by hand from the Actions tab, and when another workflow calls it.
-# The daily job (daily.yml) calls it, because a push made with the job's own token does not start
-# other workflows.
+# It runs by hand from the Actions tab, and when another workflow calls it. The daily job
+# (daily.yml) calls it, because a push made with the job's own token does not start other
+# workflows.
+#
+# Deploying on every push to main is off in the starter, so nothing runs by itself. To turn it on,
+# see "Deploy on every push" in README.md.
 name: Site
 
 on:
-  push:
-    branches: [main]
+  # To deploy on every push to main, remove the "# " from the next two lines, then commit and push.
+  # push:
+  #   branches: [main]
   workflow_dispatch:
   workflow_call:
     inputs:

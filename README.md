@@ -114,10 +114,26 @@ not need your OpenAI key: JSONyan already has it as `openAIApiKey`.
 
 1. In the repository, open **Settings → Pages**, and under **Build and deployment** set
    **Source** to **GitHub Actions**.
-2. Open the **Actions** tab and run **Site** by hand, or push a commit. The site is at
+2. Open the **Actions** tab, choose **Site**, then **Run workflow**. The site is at
    `https://<owner>.github.io/<repository>/`.
 
 GitHub Pages sites are public, even from a private repository on most plans.
+
+### Deploy on every push
+
+Nothing in the starter runs by itself: a push does not deploy the site until you turn that on.
+The daily job deploys the site whenever the words change, so you need this only to publish
+changes you make to `site/` without running **Site** by hand. Edit `.github/workflows/site.yml`
+and remove the `# ` in front of these two lines, keeping their indentation:
+
+```yaml
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+```
+
+Commit and push. Every push to `main` then deploys the site.
 
 ## 6. The daily job
 
