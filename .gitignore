@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+
+# Built site (npm run build:site)
+/dist/
+
+# Your local client's values and your OpenAI key. Only the example is committed.
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# JSONyan's reference, downloaded by following START.md, so every copy is current.
+/docs/

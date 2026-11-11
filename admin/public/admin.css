@@ -1,0 +1,96 @@
+/* The admin's styles. Replace them, or bring in any React component library. */
+
+:root {
+  color-scheme: light dark;
+  --text: light-dark(#1d1d1f, #ececee);
+  --muted: light-dark(#5f6168, #a3a5ad);
+  --background: light-dark(#ffffff, #17181b);
+  --surface: light-dark(#f4f4f6, #222327);
+  --border: light-dark(#dcdce0, #34363b);
+  --accent: light-dark(#3451d1, #8ea2ff);
+  --error: light-dark(#b42318, #ff8a80);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--background);
+}
+
+.top {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+
+  a {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+}
+
+main {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+code,
+pre {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+}
+
+pre {
+  overflow-x: auto;
+  padding: 1rem;
+  background: var(--surface);
+}
+
+input,
+button {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--error);
+}

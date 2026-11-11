@@ -1,0 +1,28 @@
+{
+  "name": "jsonyan-starter",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "admin": "tsx --env-file-if-exists=.env admin/dev.ts",
+    "setup": "tsx --env-file-if-exists=.env jsonyan/setup/index.ts",
+    "daily": "tsx --env-file-if-exists=.env ci/daily.ts",
+    "site": "tsx site/dev.ts",
+    "build:site": "tsx site/build.tsx",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "openai": "^7.55.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

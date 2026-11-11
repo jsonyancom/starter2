@@ -1,0 +1,57 @@
+# Builds the site from content/ and deploys it to GitHub Pages. It never calls JSONyan, so it
+# needs no secrets.
+#
+# Turn Pages on once: Settings → Pages → Build and deployment → Source: GitHub Actions.
+#
+# It runs on every push to main, by hand from the Actions tab, and when another workflow calls it.
+# The daily job (daily.yml) calls it, because a push made with the job's own token does not start
+# other workflows.
+name: Site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: The commit to build. The daily job passes the commit it just pushed.
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. A newer run waits instead of cancelling one in progress.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build:site
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

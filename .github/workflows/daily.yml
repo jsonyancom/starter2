@@ -1,0 +1,69 @@
+# Runs `npm run daily` on a schedule, because JSONyan cannot schedule anything itself, then
+# commits content/ and deploys the site when the words changed.
+#
+# - 00:17 UTC: retrieve finished AI batches, start today's word, publish.
+# - 03:17 UTC: retrieve and publish only, so today's word usually appears the same day.
+#
+# It needs the six JSONYAN_* values of a JSONyan client as repository secrets:
+# Settings → Secrets and variables → Actions → New repository secret. See README.md.
+name: Daily
+
+on:
+  schedule:
+    # Not at minute 0: runs start late when GitHub is busy, mostly at the top of the hour.
+    - cron: '17 0 * * *'
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.push.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # A run by hand does every step, like the first schedule.
+      - run: npm run daily -- $DAILY_ARGS
+        env:
+          DAILY_ARGS: ${{ github.event.schedule == '17 3 * * *' && '--retrieve-only' || '' }}
+          JSONYAN_URL: ${{ secrets.JSONYAN_URL }}
+          JSONYAN_API_PATH: ${{ secrets.JSONYAN_API_PATH }}
+          JSONYAN_TOKEN_URL: ${{ secrets.JSONYAN_TOKEN_URL }}
+          JSONYAN_PROJECT_ID: ${{ secrets.JSONYAN_PROJECT_ID }}
+          JSONYAN_CLIENT_ID: ${{ secrets.JSONYAN_CLIENT_ID }}
+          JSONYAN_CLIENT_SECRET: ${{ secrets.JSONYAN_CLIENT_SECRET }}
+      # Commit what was published, even when another step failed. No change, no commit.
+      - id: push
+        if: ${{ !cancelled() }}
+        run: |
+          git add content
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Publish words $(date -u +%F)"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  # A push made with the job's own token does not start other workflows, so deploy from here.
+  site:
+    needs: daily
+    if: ${{ !cancelled() && needs.daily.outputs.sha != '' }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/site.yml
+    with:
+      ref: ${{ needs.daily.outputs.sha }}

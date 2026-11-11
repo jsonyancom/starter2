@@ -1,0 +1,61 @@
+/* The site's styles: a readable column in light and dark. Replace them with your own design. */
+
+:root {
+  color-scheme: light dark;
+  --text: light-dark(#1d1d1f, #ececee);
+  --background: light-dark(#ffffff, #17181b);
+  --border: light-dark(#dcdce0, #34363b);
+  --accent: light-dark(#3451d1, #8ea2ff);
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--background);
+}
+
+header,
+main {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+}
+
+header {
+  border-bottom: 1px solid var(--border);
+
+  a {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+}
+
+a {
+  color: var(--accent);
+}
+
+code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+}
+
+dl {
+  margin: 0;
+
+  div {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+dt {
+  font-size: 1.15em;
+  font-weight: 600;
+}
+
+dd {
+  margin: 0.25rem 0 0;
+}
