@@ -121,18 +121,43 @@ GitHub Pages sites are public, even from a private repository on most plans.
 
 ## 6. The daily job
 
-`.github/workflows/daily.yml` runs `npm run daily` on a schedule:
+`.github/workflows/daily.yml` runs `npm run daily` on GitHub. Each run collects finished words,
+writes every word in the table to `content/words.json`, and, when the file changed, commits it to
+`main` and deploys the site.
+
+### Try it by hand first
+
+Open the **Actions** tab, choose **Daily**, then **Run workflow**. The run must end green: it
+starts today's word and publishes the words you added in the admin. If it fails, its log names
+what is missing, usually a repository secret from step 5.
+
+Run it by hand again whenever you want to publish now, for example after adding or deleting words
+in the admin.
+
+### Turn on the schedule
+
+The schedule is off in the starter, so nothing runs by itself until the app is set up. To turn
+it on, edit `.github/workflows/daily.yml` and remove the `# ` in front of these three lines,
+keeping their indentation:
+
+```yaml
+on:
+  schedule:
+    - cron: '17 0 * * *'
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+```
+
+Commit and push. The job then runs every day:
 
 | Time (UTC) | What it does                                                                        |
 | ---------- | ----------------------------------------------------------------------------------- |
 | 00:17      | Collects finished words, starts today's word, and publishes                         |
 | 03:17      | Collects finished words and publishes, so today's word usually appears the same day |
 
-Publishing writes every word in the table to `content/words.json`. When the file changed, the job
-commits it to `main` and deploys the site.
+To turn it off again, put the `# ` back, or choose **Disable workflow** in the **Daily**
+workflow's "…" menu in the **Actions** tab.
 
-- **Run it by hand**: open the **Actions** tab, choose **Daily**, then **Run workflow**. Do this
-  after adding or deleting words in the admin to publish them now.
 - **A word can take a day.** OpenAI finishes a batch within 24 hours, usually much sooner. A new
   word is not started while the previous one is still unfinished.
 - **Change the times** in the `cron` lines of `daily.yml`. Keep the `'17 3 * * *'` text the same

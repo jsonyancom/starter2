@@ -1,6 +1,9 @@
 # Runs `npm run daily` on a schedule, because JSONyan cannot schedule anything itself, then
 # commits content/ and deploys the site when the words changed.
 #
+# The schedule is off in the starter. Turn it on once the app is set up: see "Turn on the
+# schedule" in README.md. Until then this runs only by hand, from the Actions tab.
+#
 # - 00:17 UTC: retrieve finished AI batches, start today's word, publish.
 # - 03:17 UTC: retrieve and publish only, so today's word usually appears the same day.
 #
@@ -9,10 +12,12 @@
 name: Daily
 
 on:
-  schedule:
-    # Not at minute 0: runs start late when GitHub is busy, mostly at the top of the hour.
-    - cron: '17 0 * * *'
-    - cron: '17 3 * * *'
+  # To turn the schedule on, remove the "# " from the next three lines, then commit and push.
+  # The times are not at minute 0: runs start late when GitHub is busy, mostly at the top of
+  # the hour.
+  # schedule:
+  #   - cron: '17 0 * * *'
+  #   - cron: '17 3 * * *'
   workflow_dispatch:
 
 concurrency:
