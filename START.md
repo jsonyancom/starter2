@@ -35,8 +35,8 @@ In `jsonyan/setup/tables/index.ts`, add one table under the key `words`:
   {
     "type": "object",
     "properties": {
-      "word": { "type": "string", "minLength": 1, "maxLength": 64 },
-      "meaning": { "type": "string", "minLength": 1, "maxLength": 1000 }
+      "word": { "type": "string" },
+      "meaning": { "type": "string" }
     },
     "required": ["word", "meaning"],
     "additionalProperties": false
@@ -50,7 +50,7 @@ already in the table:
 
 | Field          | Value                                                                 |
 | -------------- | --------------------------------------------------------------------- |
-| `partitionKey` | The word, the same string as `content.word`                           |
+| `partitionKey` | The word in lowercase, the same string as `content.word`              |
 | `sortInt`      | `0`. A key query leaves out rows without the sort value it reads.     |
 | `content`      | `{ "word": …, "meaning": … }`                                         |
 
@@ -66,6 +66,13 @@ For both:
 - The model is `gpt-6-luna`.
 - The meaning is one or two plain sentences that explain the word to a general reader.
 - A word gets one row. When the table already has the word, do not create another row.
+- Every word is stored in lowercase, so that `Serendipity` and `serendipity` are one word. Each
+  workflow lowercases the word it gets, from the admin or from OpenAI, with CEL's `lowerAscii()`
+  before the key query and before saving: for example `"word": "result.word.lowerAscii()"` in an
+  `assignCel`. JSONyan's CEL has this function, although the cel-js reference does not list it.
+- Do not add `minLength` or `maxLength` to a schema sent to OpenAI, in the batch action's
+  `outputSchema` or in `submitWord`'s ask. OpenAI's strict structured output does not accept
+  them, so every prompt would fail. The table has no length limits, so no schema needs them.
 - Set `completedInstanceTTL` and `failedInstanceTTL`, so finished instances are not kept forever.
 
 ### `dailyWord`: a batch, because nobody waits
@@ -73,6 +80,12 @@ For both:
 `ci/daily.ts` starts it once a day with no input, and later resumes it.
 
 - OpenAI picks one English word that the table does not have yet, and explains it.
+- OpenAI cannot see the table, so the workflow lists first: before it submits the batch, it reads
+  every row of the table with `v1.listRowMetadataByUpdatedAt`, page by page, and names each
+  `partitionKey` in the prompt as a word not to pick.
+- OpenAI can still pick a word the table has. So the workflow also runs the key query on the
+  answer's word before saving. When the table has the word, the instance ends without saving a
+  row, and the next day's run picks again.
 - It calls OpenAI through a batch: the workflow actions `v1.openaiSubmitBatch` and
   `v1.openaiRetrieveBatch`, with `secretName` set to `openAIApiKey`.
 - Every time the instance waits, a resume with no answer must be valid. The daily job resumes
@@ -90,7 +103,8 @@ the admin's server sends the prompt with the OpenAI JS SDK (`admin/openai.ts`).
 
 1. The admin starts it with the input `{ "word": "<the word as typed>" }`. So the initial state is
    an ask whose `inputValidation` accepts exactly that object. When it rejects the input, the admin
-   shows the user `ask.answerError.message`.
+   shows the user `ask.answerError.message`. The workflow lowercases the word before it does
+   anything else with it.
 2. When the table already has the word, the workflow completes without asking anything.
 3. Otherwise it waits at an ask whose response is exactly this object:
 
@@ -110,29 +124,48 @@ the admin's server sends the prompt with the OpenAI JS SDK (`admin/openai.ts`).
    prompt again, up to three times. Then it deletes the instance.
 5. With an accepted answer, the workflow saves the row and completes.
 
-## 5. Apply and check
+## 5. Apply
 
 Tables and workflows can be changed but not deleted, and JSONyan checks CEL only when an instance
-reaches it. So read your definitions against the specification before creating anything.
+reaches it. So before creating anything, read your definitions against the specification, and
+their CEL against the CEL reference that `docs/jsonyan.md` has you download.
 
 ```sh
 npm run setup       # creates or updates them by name, and writes jsonyan/resources.ts
 npm run typecheck
 ```
 
-Then run each workflow once. Both call OpenAI with the user's key and spend JSONyan credits, so
-tell the user first. They need step 2 of `README.md`: `OPENAI_API_KEY` in `.local.env`, and the secret
-`openAIApiKey` in the project. If that is not done, ask the user to do it, or finish without these
-two checks and say so.
+This needs no OpenAI key. Do not start a workflow yet: both call OpenAI with the user's key, which
+the user adds after this file (step 2 of `README.md`).
 
-- **`submitWord`**: run `npm run admin` in the background and submit a word:
+## 6. Hand over
+
+The setup is finished here. Tell the user:
+
+- what you created;
+- which `v1` methods the actions of `dailyWord` call, in case they give the GitHub job a client
+  limited to the methods it needs (step 5 of `README.md`);
+- that the workflows have not run yet, so their CEL is still unchecked;
+- to do step 2 of `README.md` next: `OPENAI_API_KEY` in `.local.env`, and the secret
+  `openAIApiKey` in the project;
+- that the two checks in step 7 come after that, and that each calls OpenAI with their key and
+  spends JSONyan credits. They can run the checks themselves, or ask you to.
+
+Then stop and wait for the user.
+
+## 7. Test, once the user has added the OpenAI key
+
+Run these only when the user asks you to. When the user runs them, help with what they show.
+
+- **`submitWord`**: run `npm run admin` in the background and submit a word. The user does this in
+  the form at http://127.0.0.1:5173/words; you do it with:
 
   ```sh
-  curl -i -X POST http://127.0.0.1:5173/words -H 'Origin: http://127.0.0.1:5173' -d 'word=serendipity'
+  curl -i -X POST http://127.0.0.1:5173/words -H 'Origin: http://127.0.0.1:5173' -d 'word=Serendipity'
   ```
 
-  A `303` means the word was saved. A `400` page holds the reason. Submit the same word again to
-  check that no second row appears on http://127.0.0.1:5173/words.
+  A `303` means the word was saved. A `400` page holds the reason. The page must list the word
+  as `serendipity`. Submit `serendipity` again to check that no second row appears.
 - **`dailyWord`**: run `npm run daily`. It starts an instance, which must be left waiting for its
   batch. That is the check: the instance did not fail. Then run
   `npm run daily -- --retrieve-only` once, a few minutes later. If the instance completed, the new
@@ -146,12 +179,3 @@ every run spends credits. Commands run within the same hour share one token
 
 When an instance fails, the output shows the state and the message. Fix the definition, run
 `npm run setup` again, and start a new instance: a failed instance cannot be resumed.
-
-## 6. Finish
-
-Tell the user:
-
-- what you created, and what each check showed;
-- which `v1` methods the actions of `dailyWord` call, in case they give the GitHub job a client
-  limited to the methods it needs (step 5 of `README.md`);
-- to continue with `README.md`.

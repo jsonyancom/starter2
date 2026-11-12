@@ -105,7 +105,8 @@ function Words({ app, rows, error }: { app: AppResources | undefined; rows: Word
         <button type="submit">Explain and save</button>
       </form>
       <p className="muted">
-        OpenAI explains the word, which can take a few seconds. The site shows it after the next daily run.
+        The word is saved in lowercase. OpenAI explains it, which can take a few seconds. The site shows it after
+        the next daily run.
       </p>
       {error !== undefined && <p className="error">{error}</p>}
       {rows.length === 0 ? (

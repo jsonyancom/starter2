@@ -2,10 +2,12 @@
 
 A small site that gets one new word every day, with its meaning written by AI.
 
-- **Every day**, OpenAI (`gpt-6-luna`) picks a word and explains it. A scheduled GitHub Actions
-  job starts that work, collects the result, and publishes it.
+- **Every day**, OpenAI (`gpt-6-luna`) picks a word and explains it. It is given the words you
+  already have, so it picks a new one. A scheduled GitHub Actions job starts that work, collects
+  the result, and publishes it.
 - **You can add a word yourself** in a local admin: type a word, and OpenAI explains it right
   away. You can also delete any word.
+- **Every word is saved in lowercase**, so `Serendipity` and `serendipity` are the same word.
 - **The site** is static HTML on GitHub Pages. It shows every word, and is redeployed whenever
   the words change.
 
@@ -39,7 +41,8 @@ The rest of this file is about running the app.
    ```
 
    It downloads JSONyan's reference into `docs/`, defines the `words` table and the `dailyWord`
-   and `submitWord` workflows in `jsonyan/setup/`, and creates them with `npm run setup`.
+   and `submitWord` workflows in `jsonyan/setup/`, and creates them with `npm run setup`. It does
+   not run them: that needs your OpenAI key, which is the next step.
 
 ## 2. Add your OpenAI key
 
@@ -51,6 +54,10 @@ The key goes in two places, because two things call OpenAI:
 - **In JSONyan**, as a secret named exactly `openAIApiKey`. On jsonyan.com, open the project,
   choose **Secrets**, then **Create secret**, enter the name `openAIApiKey` and paste the key as
   the value. The daily word uses it: JSONyan sends that batch to OpenAI itself.
+
+The workflows have not run yet, so test them now. Submit a word in the admin (step 3), and run
+`npm run daily` once (step 6). Or ask your coding agent to do step 7 of `START.md`, which runs
+both checks and fixes a workflow that fails.
 
 ## 3. Use the admin
 
